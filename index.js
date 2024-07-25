@@ -9,6 +9,7 @@ app.use(cors())
 
 //json parser (tarvitsee datan lisäämiseen)
 app.use(express.json())
+app.use(express.static('dist'))
 
 let giveawaysBackend = [
     {
