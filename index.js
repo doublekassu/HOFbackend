@@ -1,7 +1,10 @@
-//Kirjasto, jolla ohjelmoida Node-backendisiä web-sovelluksia
+//Kirjasto, jolla ohjelmoida Node-backendisiä web-sovelluksi
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const Giveaway = require('./models/databaseconnection')
 const app = express()
+
 
 //Jotta frontend ja backend voivat kommunikoida keskenään eri porteilla
 app.use(cors())
@@ -47,7 +50,9 @@ app.get('/', (request, response) => {
 
 //Haetaan kaikki arvonnat
 app.get('/api/giveaways', (request, response) => {
-    response.json(giveawaysBackend)
+    Giveaway.find({}).then(notes => {
+        response.json(notes)
+    })
 })
 
 //Haetaan yksittäinen arvonnat sen id:n perusteella
@@ -120,7 +125,7 @@ const generateId = () => {
     //Arvonnan id on maxId+1, samalla muutetaan se Stringiksi
     return String(maxId + 1)
 }
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
