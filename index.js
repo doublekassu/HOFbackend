@@ -1,5 +1,5 @@
-//Kirjasto, jolla ohjelmoida Node-backendisiä web-sovelluksi
 require('dotenv').config()
+//Kirjasto, jolla ohjelmoida Node-backendisiä web-sovelluksi
 const express = require('express')
 const cors = require('cors')
 const Giveaway = require('./models/databaseconnection')
@@ -10,43 +10,9 @@ const app = express()
 app.use(cors())
 
 
-//json parser (tarvitsee datan lisäämiseen)
+//json parser (tarvitsee datan lisäämiseen app.postissa)
 app.use(express.json())
 app.use(express.static('dist'))
-
-let giveawaysBackend = [
-    {
-        "id": "1",
-        "content": "CS2 skin k k k k k kk k k k k k kk k k k k k k k k k k kk  kk k k k k k k k k k k k kk k k k k k k k k k k k k kk k k k k k k k k k k k k k k k",
-        "organizer": "Anomaly",
-        "link": null,
-        "imgid": "a"
-    },
-    {
-        "id": "2",
-        "content":"CS2 skin",
-        "organizer":"Banks",
-        "link": "https://x.com/BanKsEsports/status/1815004908258545738",
-        "imgid": "1hUAsBnVO2DZUPfbKD89UOygoe3D9oMN0"
-    },
-    {
-        "id":"3",
-        "content":"TECH",
-        "organizer":"PowerGPU",
-        "imgid": ""
-    },
-    {
-        "id": "4",
-        "content":"test",
-        "organizer": "test",
-        "imgid": "test"
-    }
-]
-
-//localhost:port palautaa Hello Worldin
-app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
-})
 
 //Haetaan kaikki arvonnat
 app.get('/api/giveaways', (request, response) => {
@@ -58,21 +24,17 @@ app.get('/api/giveaways', (request, response) => {
 //Haetaan yksittäinen arvonnat sen id:n perusteella
 app.get('/api/giveaways/:id', (request, response) => {
     const id = request.params.id
-    const giveaway = giveawaysBackend.find(giveaway => giveaway.id === id)
-    if (giveaway) {
+    Giveaway.findById(id).then(giveaway => {
         response.json(giveaway)
-    }
-    else {
-        response.status(404).end()
-    }
+    })
 })
 
 //Yksittäisen arvonnan poistaminen sen id:n perusteella
-app.delete('/api/giveaways/:id', (request, response) => {
+app.delete('/api/giveaways/:id', (request, response, next) => {
     const id = request.params.id
-    giveawaysBackend = giveawaysBackend.filter(giveaway => giveaway.id !== id)
-
-    response.status(204).end()
+    Giveaway.findByIdAndDelete(id).then(result => {
+        response.status(204).end()
+    })
 })
 
 //Yksittäisen arvonnan lisääminen
@@ -100,31 +62,18 @@ app.post('/api/giveaways', (request, response) => {
         })
     }
 
-    const giveaway = {
-        id: generateId(),
+    const giveaway = new Giveaway ({
         content: body.content,
         organizer: body.organizer,
         link: body.link,
         imgid: body.imgid
-    }
-    //laajennetaan nykyistä taulukkoa postatulla arvonnalla
-    giveawaysBackend = giveawaysBackend.concat(giveaway)
-
-    response.json(giveaway)
+    })
+    
+    giveaway.save().then(savedGiveaway => {
+        response.json(savedGiveaway)
+    })
 })
 
-const generateId = () => {
-    let maxId = 0
-    //Mapitetaan giveawaysBackend taulukko ja asetetaan maxId:ksi taulukon suurin arvo
-    if (giveawaysBackend > 0) {
-        maxId = Math.max(...giveawaysBackend.map(x => Number(x.id)))
-    }
-    else {
-        maxId = 0
-    }
-    //Arvonnan id on maxId+1, samalla muutetaan se Stringiksi
-    return String(maxId + 1)
-}
 const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
